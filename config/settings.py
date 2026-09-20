@@ -26,7 +26,7 @@ def env_list(name: str, default: str = "") -> list[str]:
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY", "dev-only-insecure-key-change-before-deploying"
 )
-DEBUG = env_bool("DJANGO_DEBUG", True)
+DEBUG = env_bool("DJANGO_DEBUG", False)
 
 ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost")
 if not DEBUG and not ALLOWED_HOSTS:

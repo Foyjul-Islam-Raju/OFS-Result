@@ -1,0 +1,132 @@
+{% extends "base_portal.html" %}
+{% load static %}
+{% block title %}{{ exam.name }} result{% endblock %}
+{% block header_actions %}
+  <div class="d-flex gap-2">
+    <a class="btn btn-sm btn-outline-light" href="{% url 'portal:exam_list' %}">All results</a>
+    <a class="btn btn-sm btn-outline-light" href="{% url 'portal:sign_out' %}">Exit</a>
+  </div>
+{% endblock %}
+{% block content %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3 no-print">
+  <div>
+    <h1 class="h4 mb-0">{{ exam.name }} {{ exam.academic_year }}</h1>
+    {% if exam.exam_type %}<span class="small text-muted">{{ exam.exam_type.name }}{% if exam.semester %} · {{ exam.semester.name }}{% endif %}</span>{% endif %}
+  </div>
+  <a class="btn btn-amber" href="{% url 'portal:result_print' exam.id %}">
+    <i class="bi bi-printer"></i> Print result
+  </a>
+</div>
+
+<div class="card-ofs mb-4">
+  <div class="card-body">
+    <div class="info-grid">
+      <div><div class="k">Student name</div><div class="v">{{ student.name }}</div></div>
+      <div><div class="k">Student ID</div><div class="v num">{{ student.student_id }}</div></div>
+      <div><div class="k">Class</div><div class="v">{{ student.classroom.name }}</div></div>
+      <div><div class="k">Section</div><div class="v">{{ student.section.name|default:"—" }}</div></div>
+      <div><div class="k">Roll</div><div class="v num">{{ student.roll|default:"—" }}</div></div>
+      <div><div class="k">Subjects examined</div><div class="v num">{{ sheet.subject_count }}</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="summary-tile">
+      <div class="label">Total marks</div>
+      <div class="value">{{ sheet.total_obtained_display }}<span class="text-muted" style="font-size:1rem;"> / {{ sheet.total_full_display }}</span></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="summary-tile sage">
+      <div class="label">Average percentage</div>
+      <div class="value">{{ sheet.percentage }}%</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="summary-tile {% if sheet.passed %}pass{% else %}fail{% endif %}">
+      <div class="label">Result</div>
+      <div class="value">{{ sheet.status_label }}</div>
+    </div>
+  </div>
+  {% if sheet.is_semester %}
+    <div class="col-6 col-lg-3">
+      <div class="summary-tile amber">
+        <div class="label">GPA this semester</div>
+        <div class="value">{{ sheet.gpa }}</div>
+      </div>
+    </div>
+    <div class="col-6 col-lg-3">
+      <div class="summary-tile amber">
+        <div class="label">CGPA</div>
+        <div class="value">{{ sheet.cgpa|default:"—" }}</div>
+        {% if sheet.semesters_counted %}<div class="small text-muted">across {{ sheet.semesters_counted }} semester(s)</div>{% endif %}
+      </div>
+    </div>
+  {% else %}
+
+  {% endif %}
+  {% if sheet.position %}
+  <div class="col-6 col-lg-3">
+    <div class="summary-tile">
+      <div class="label">Class position</div>
+      <div class="value">{{ sheet.position }}<span class="text-muted" style="font-size:1rem;"> of {{ sheet.position_of }}</span></div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="card-ofs">
+  <div class="card-head">
+    <h2 class="h6 mb-0">Subject marks</h2>
+    <span class="small text-muted">Highest mark is the top score in {{ student.classroom.name }} for this exam.</span>
+  </div>
+  <div class="table-wrap">
+    <table class="table-ofs">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th class="right">Full mark</th>
+          <th class="right">Obtained</th>
+          {% if sheet.show_letter_grade %}<th>Grade</th>{% endif %}
+          {% if sheet.is_semester %}<th class="right">Grade point</th>{% endif %}
+          <th class="right">Highest mark</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in sheet.rows %}
+          <tr>
+            <td>{{ row.subject_name }}</td>
+            <td class="right num">{{ row.full_mark }}</td>
+            <td class="right num {% if row.is_absent %}text-muted{% endif %}">{{ row.obtained_display }}</td>
+            {% if sheet.show_letter_grade %}
+              <td><span class="pill pill-grade {% if row.grade == 'F' %}g-f{% elif row.grade == 'Absent' %}g-abs{% endif %}">{{ row.grade|default:"—" }}</span></td>
+            {% endif %}
+            {% if sheet.is_semester %}<td class="right num">{{ row.grade_point }}</td>{% endif %}
+            <td class="right num top-mark">{{ row.highest_display }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+      <tfoot>
+        <tr style="background:#edf4e7;font-weight:700;">
+          <td>Total</td>
+          <td class="right num">{{ sheet.total_full_display }}</td>
+          <td class="right num">{{ sheet.total_obtained_display }}</td>
+          <td colspan="{% if sheet.is_semester %}3{% elif sheet.show_letter_grade %}2{% else %}1{% endif %}" class="right">
+            
+            <!-- {{ sheet.percentage }}%{% if sheet.is_semester %} · GPA {{ sheet.gpa }}{% endif %} -->
+          </td>
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+
+{% if sheet.failed_subjects %}
+  <p class="small text-danger mt-3">
+    Below the pass mark in: {{ sheet.failed_subjects|join:", " }}.
+  </p>
+{% endif %}
+{% endblock %}

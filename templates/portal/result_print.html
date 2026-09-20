@@ -1,0 +1,117 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Result · {{ student.name }} · {{ exam.name }}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Public+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="{% static 'css/theme.css' %}" rel="stylesheet">
+  <style>
+    body { background: #e9ece4; }
+    .print-sheet {
+      width: 210mm; max-width: 100%; min-height: 265mm;
+      margin: 18px auto; background: #fff; padding: 22mm 16mm;
+      border: 1px solid var(--line); box-shadow: var(--shadow);
+    }
+    .sheet-head { display: flex; align-items: center; gap: 16px; border-bottom: 3px double var(--navy); padding-bottom: 12px; }
+    .sheet-head img { width: 76px; height: 76px; }
+    .sheet-title { font-family: var(--font-display); font-size: 1.5rem; color: var(--navy-deep); line-height: 1.15; }
+    .exam-band { text-align: center; margin: 14px 0 18px; }
+    .exam-band span { display: inline-block; border: 1px solid var(--navy); padding: 4px 18px; border-radius: 999px; font-weight: 600; color: var(--navy-deep); }
+    .sig { margin-top: 42px; display: flex; justify-content: space-between; gap: 30px; }
+    .sig div { border-top: 1px solid var(--ink); padding-top: 5px; font-size: .8rem; width: 170px; text-align: center; }
+  </style>
+</head>
+<body onload="window.print()">
+  <div class="text-center py-3 no-print">
+    <button class="btn btn-navy" onclick="window.print()">Print this page</button>
+    <a class="btn btn-outline-navy" href="{% url 'portal:result' exam.id %}">Back to result</a>
+  </div>
+
+  <div class="print-sheet">
+    <div class="sheet-head">
+      <img src="{% static 'images/logo.png' %}" alt="">
+      <div style="font-family: 'Times New Roman', Times, serif;">
+        <div class="sheet-title">{{ site.institution_name|default:"Online Foundation School" }}</div>
+        <div class="text-muted small">{{ site.address|default:"" }}</div>
+        <div class="text-muted small">Academic year {{ exam.academic_year }}</div>
+      </div>
+    </div>
+
+    <div class="exam-band"><span style="font-family: 'Times New Roman', Times, serif; color: rgb(38, 44, 109);">{{ exam.name }}{% if exam.semester %} — {{ exam.semester.name }}{% endif %} — Report Card</span></div>
+
+    <table class="w-100 mb-3" style="font-size:.9rem; font-family: 'Times New Roman', Times, serif;">
+      <tr>
+        <td style="width:50%"><strong>Name:</strong> {{ student.name }}</td>
+        <td><strong>Student ID:</strong> <span class="num">{{ student.student_id }}</span></td>
+      </tr>
+      <tr>
+        <td><strong>Class:</strong> {{ student.classroom.name }}{% if student.section %} &nbsp; <strong>Section:</strong> {{ student.section.name }}{% endif %}</td>
+        <td><strong>Roll:</strong> <span class="num">{{ student.roll|default:"—" }}</span></td>
+      </tr>
+    </table>
+
+    <table class="table-ofs" style="border:1px solid var(--line); font-family: 'Times New Roman', Times, serif;">
+      <thead>
+        <tr>
+          <th>Subject</th>
+          <th class="right">Full mark</th>
+          <th class="right">Obtained</th>
+          {% if sheet.show_letter_grade %}<th>Grade</th>{% endif %}
+          {% if sheet.is_semester %}<th class="right">Grade point</th>{% endif %}
+          <th class="right">Highest mark</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in sheet.rows %}
+          <tr>
+            <td>{{ row.subject_name }}</td>
+            <td class="right num">{{ row.full_mark }}</td>
+            <td class="right num">{{ row.obtained_display }}</td>
+            {% if sheet.show_letter_grade %}<td>{{ row.grade|default:"—" }}</td>{% endif %}
+            {% if sheet.is_semester %}<td class="right num">{{ row.grade_point }}</td>{% endif %}
+            <td class="right num">{{ row.highest_display }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <table class="w-100 mt-3" style="font-size:.95rem; font-family: 'Times New Roman', Times, serif;">
+      <tr>
+        <td><strong>Total marks:</strong> <span class="num">{{ sheet.total_obtained_display }} / {{ sheet.total_full_display }}</span></td>
+        <td><strong>Average percentage:</strong> <span class="num">{{ sheet.percentage }}%</span></td>
+      </tr>
+      <tr>
+        <td><strong>Subjects examined:</strong> <span class="num">{{ sheet.subject_count }}</span></td>
+        <td><strong>Result:</strong> {{ sheet.status_label }}</td>
+      </tr>
+      {% if sheet.is_semester %}
+      <tr>
+        <td><strong>GPA (this semester):</strong> <span class="num">{{ sheet.gpa }}</span></td>
+        <td><strong>CGPA:</strong> <span class="num">{{ sheet.cgpa|default:"—" }}</span></td>
+      </tr>
+      {% endif %}
+      {% if sheet.position %}
+      <tr><td><strong>Position:</strong> {{ sheet.position }} of {{ sheet.position_of }}</td><td></td></tr>
+      {% endif %}
+    </table>
+
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <br>
+    <div class="sig" style="font-family: 'Times New Roman', Times, serif;">
+      <div>Class Teacher</div>
+      <div>Examination Controller</div>
+      <div>Principal</div>
+    </div>
+
+    <p style="font-family: 'Times New Roman', Times, serif;" class="text-muted small text-center mt-4 mb-0">{{ site.result_footer_note|default:"This is a computer generated result sheet." }}</p>
+  </div>
+</body>
+</html>

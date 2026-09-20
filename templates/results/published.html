@@ -1,0 +1,32 @@
+{% extends "base_admin.html" %}
+{% block title %}Published results{% endblock %}
+{% block page_heading %}Published results{% endblock %}
+{% block content %}
+<div class="card-ofs">
+  <div class="card-head"><h2 class="h6 mb-0">Publication log</h2></div>
+  {% if publications %}
+  <div class="table-wrap">
+    <table class="table-ofs">
+      <thead><tr><th>Exam</th><th>Class</th><th>Section</th><th>State</th><th>Published at</th><th>By</th><th></th></tr></thead>
+      <tbody>
+        {% for pub in publications %}
+          <tr>
+            <td>{{ pub.exam }}</td>
+            <td>{{ pub.classroom.name }}</td>
+            <td>{{ pub.section.name|default:"All" }}</td>
+            <td><span class="pill {% if pub.is_published %}pill-live{% else %}pill-draft{% endif %}">{% if pub.is_published %}Published{% else %}Draft{% endif %}</span></td>
+            <td class="small">{{ pub.published_at|date:"d M Y, H:i"|default:"—" }}</td>
+            <td class="small">{{ pub.published_by|default:"—" }}</td>
+            <td class="text-end">
+              <a class="btn btn-sm btn-outline-navy" href="{% url 'results:review' %}?exam={{ pub.exam_id }}&classroom={{ pub.classroom_id }}{% if pub.section_id %}&section={{ pub.section_id }}{% endif %}">Open</a>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+    <div class="empty"><i class="bi bi-broadcast"></i> Nothing has been published yet. Publish a result from the review page.</div>
+  {% endif %}
+</div>
+{% endblock %}

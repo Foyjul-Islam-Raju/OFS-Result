@@ -1,0 +1,30 @@
+{% extends "base_portal.html" %}
+{% load static %}
+{% block title %}Check your result{% endblock %}
+{% block content %}
+<div class="text-center mb-4">
+  <img src="{% static 'images/logo.png' %}" alt="{{ site.institution_name }} seal" class="seal">
+  <h1 class="display-serif mt-3 mb-1" style="font-size:2rem;">Welcome to the OFS Result System</h1>
+  <p class="text-muted mb-0">Enter your Student ID and choose your class to see your result.</p>
+</div>
+
+<div class="lookup-card">
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="mb-3">
+      <label class="form-label" for="{{ form.student_id.id_for_label }}">Student ID</label>
+      {{ form.student_id }}
+      {% for error in form.student_id.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+    </div>
+    <div class="mb-4">
+      <label class="form-label" for="{{ form.classroom.id_for_label }}">Class</label>
+      {{ form.classroom }}
+      {% for error in form.classroom.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+    </div>
+    <button type="submit" class="btn btn-navy btn-lg w-100">View result</button>
+  </form>
+  <p class="text-muted small text-center mt-3 mb-0">
+    No password is needed. Your ID and class must match our records.
+  </p>
+</div>
+{% endblock %}

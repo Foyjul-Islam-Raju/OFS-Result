@@ -1,0 +1,27 @@
+{% extends "base_admin.html" %}
+{% block title %}Sections{% endblock %}
+{% block page_heading %}Sections{% endblock %}
+{% block content %}
+<div class="card-ofs">
+  <div class="card-head"><h2 class="h6 mb-0">Sections</h2>
+    <a class="btn btn-sm btn-sage" href="{% url 'academics:section_add' %}"><i class="bi bi-plus-lg"></i> Add section</a></div>
+  {% if sections %}
+  <div class="table-wrap"><table class="table-ofs">
+    <thead><tr><th>Class</th><th>Section</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      {% for s in sections %}
+      <tr>
+        <td>{{ s.classroom.name }}</td><td class="fw-semibold">{{ s.name }}</td>
+        <td><span class="pill {% if s.is_active %}pill-pass{% else %}pill-draft{% endif %}">{% if s.is_active %}Active{% else %}Hidden{% endif %}</span></td>
+        <td class="text-end text-nowrap">
+          <a class="btn btn-sm btn-outline-navy" href="{% url 'academics:section_edit' s.pk %}"><i class="bi bi-pencil"></i></a>
+          <a class="btn btn-sm btn-outline-danger" href="{% url 'academics:section_delete' s.pk %}"><i class="bi bi-trash"></i></a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty"><i class="bi bi-diagram-3"></i> Sections are optional. Add them only if your classes are split into A, B, C.
+    <div class="mt-3"><a class="btn btn-sage" href="{% url 'academics:section_add' %}">Add a section</a></div></div>{% endif %}
+</div>
+{% endblock %}

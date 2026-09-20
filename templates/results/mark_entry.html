@@ -1,0 +1,131 @@
+{% extends "base_admin.html" %}
+{% block title %}Mark entry{% endblock %}
+{% block page_heading %}Mark entry{% endblock %}
+{% block content %}
+
+<div class="card-ofs mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-md-4">
+        <label class="form-label" for="exam">Exam</label>
+        <select class="form-select" name="exam" id="exam" required>
+          <option value="">Select exam</option>
+          {% for item in select_form.fields.exam.queryset %}
+            <option value="{{ item.id }}" {% if exam and exam.id == item.id %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label" for="classroom">Class</label>
+        <select class="form-select" name="classroom" id="classroom" required>
+          <option value="">Select class</option>
+          {% for item in select_form.fields.classroom.queryset %}
+            <option value="{{ item.id }}" {% if classroom and classroom.id == item.id %}selected{% endif %}>{{ item.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="section">Section</label>
+        <select class="form-select" name="section" id="section">
+          <option value="">All sections</option>
+          {% for item in select_form.fields.section.queryset %}
+            <option value="{{ item.id }}" data-classroom="{{ item.classroom_id }}" {% if section and section.id == item.id %}selected{% endif %}>{{ item }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label" for="q">Search student</label>
+        <input class="form-control" type="search" name="q" id="q" value="{{ search }}" placeholder="Name or ID">
+      </div>
+      <div class="col-md-1 d-grid">
+        <button class="btn btn-navy" type="submit">Load</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% if not exam or not classroom %}
+  <div class="card-ofs"><div class="empty">
+    <i class="bi bi-ui-checks-grid"></i>
+    Choose an exam and a class above to start entering marks.
+  </div></div>
+{% elif not exam_subjects %}
+  <div class="card-ofs"><div class="empty">
+    <i class="bi bi-sliders"></i>
+    No subjects with full marks are set up for {{ classroom.name }} in {{ exam }}.
+    <div class="mt-3"><a class="btn btn-sage" href="{% url 'academics:examsubject_add' %}">Set full marks</a></div>
+  </div></div>
+{% elif not students %}
+  <div class="card-ofs"><div class="empty">
+    <i class="bi bi-people"></i>
+    No active students found for this selection.
+    <div class="mt-3"><a class="btn btn-sage" href="{% url 'students:add' %}">Add a student</a></div>
+  </div></div>
+{% else %}
+
+  {% if form.errors %}
+    <div class="alert alert-danger">
+      <strong>Some marks were rejected.</strong>
+      <ul class="mb-0 mt-2 small">
+        {% for field, errors in form.errors.items %}{% for error in errors %}<li>{{ error }}</li>{% endfor %}{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="exam" value="{{ exam.id }}">
+    <input type="hidden" name="classroom" value="{{ classroom.id }}">
+    {% if section %}<input type="hidden" name="section" value="{{ section.id }}">{% endif %}
+
+    <div class="card-ofs">
+      <div class="card-head">
+        <div>
+          <h2 class="h6 mb-0">{{ exam.name }} {{ exam.academic_year }} — {{ classroom.name }}{% if section %} ({{ section.name }}){% endif %}</h2>
+          <span class="small text-muted">{{ students|length }} student(s) · enter obtained marks only, everything else is calculated.</span>
+        </div>
+        <span class="pill {% if publication.is_published %}pill-live{% else %}pill-draft{% endif %}">
+          {% if publication.is_published %}Published{% else %}Draft{% endif %}
+        </span>
+      </div>
+
+      <div class="table-wrap">
+        <table class="table-ofs grid-table">
+          <thead>
+            <tr>
+              <th class="sticky-col">Student</th>
+              {% for es in exam_subjects %}
+                <th class="subject-col">{{ es.subject.name }}<div class="fw-normal text-muted" style="font-size:.7rem;">full {{ es.full_mark }}</div></th>
+              {% endfor %}
+            </tr>
+          </thead>
+          <tbody>
+            {% for student, cells in form.iter_cells %}
+              <tr>
+                <td class="sticky-col">
+                  <div class="fw-semibold">{{ student.name }}</div>
+                  <div class="text-muted small num">{{ student.student_id }}{% if student.roll %} · Roll {{ student.roll }}{% endif %}{% if student.section %} · {{ student.section.name }}{% endif %}</div>
+                </td>
+                {% for cell in cells %}
+                  <td class="text-center">
+                    {{ cell.mark }}
+                    <label class="d-block small text-muted mt-1" style="font-size:.7rem;">
+                      {{ cell.absent }} Absent
+                    </label>
+                  </td>
+                {% endfor %}
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card-body d-flex flex-wrap gap-2 border-top">
+        <button type="submit" class="btn btn-navy"><i class="bi bi-save"></i> Save draft</button>
+        <button type="submit" name="next" value="review" class="btn btn-sage"><i class="bi bi-clipboard-check"></i> Save and review</button>
+        <a class="btn btn-outline-navy ms-auto" href="{% url 'results:review' %}?exam={{ exam.id }}&classroom={{ classroom.id }}{% if section %}&section={{ section.id }}{% endif %}">Go to review</a>
+      </div>
+    </div>
+  </form>
+{% endif %}
+{% endblock %}

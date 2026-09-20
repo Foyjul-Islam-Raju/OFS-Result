@@ -1,0 +1,97 @@
+{% extends "base_admin.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_heading %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-2"><div class="stat"><div class="label">Students</div><div class="value">{{ total_students }}</div></div></div>
+  <div class="col-6 col-lg-2"><div class="stat"><div class="label">Classes</div><div class="value">{{ total_classes }}</div></div></div>
+  <div class="col-6 col-lg-2"><div class="stat"><div class="label">Subjects</div><div class="value">{{ total_subjects }}</div></div></div>
+  <div class="col-6 col-lg-2"><div class="stat"><div class="label">Exams</div><div class="value">{{ total_exams }}</div></div></div>
+  <div class="col-6 col-lg-2"><div class="stat sage"><div class="label">Published results</div><div class="value">{{ published_count }}</div></div></div>
+  <div class="col-6 col-lg-2"><div class="stat amber"><div class="label">Draft results</div><div class="value">{{ draft_count }}</div></div></div>
+</div>
+
+<div class="card-ofs mb-4">
+  <div class="card-head">
+    <h2 class="h6 mb-0">Exam statistics</h2>
+    <form method="get" class="d-flex gap-2 flex-wrap">
+      <select class="form-select form-select-sm" name="exam" style="min-width:210px;">
+        <option value="">Select exam</option>
+        {% for exam in all_exams %}<option value="{{ exam.id }}" {% if selected_exam == exam.id|stringformat:"s" %}selected{% endif %}>{{ exam }}</option>{% endfor %}
+      </select>
+      <select class="form-select form-select-sm" name="classroom" style="min-width:150px;">
+        <option value="">Select class</option>
+        {% for c in all_classes %}<option value="{{ c.id }}" {% if selected_class == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+      <button class="btn btn-sm btn-navy">Show</button>
+    </form>
+  </div>
+  <div class="card-body">
+    {% if stat_exam %}
+      <div class="row g-3 mb-3">
+        <div class="col-6 col-lg-3"><div class="stat sage"><div class="label">Passed</div><div class="value">{{ stat_passed }}</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat danger"><div class="label">Failed</div><div class="value">{{ stat_failed }}</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat"><div class="label">Class average total</div><div class="value">{{ stat_average|floatformat:2|default:"—" }}</div></div></div>
+        <div class="col-6 col-lg-3"><div class="stat amber"><div class="label">Highest total</div><div class="value">{{ stat_highest_total|floatformat:"-2"|default:"—" }}</div></div></div>
+      </div>
+      <h3 class="h6 mb-2">How the class scored — {{ stat_class.name }}, {{ stat_exam.name }}</h3>
+      {% for band in grade_spread %}
+        <div class="d-flex align-items-center gap-2 mb-1">
+          <span class="small text-muted" style="width:120px;">{{ band.band }}</span>
+          <div class="flex-grow-1" style="background:#eef1e8;border-radius:999px;height:14px;overflow:hidden;">
+            <div style="width:{{ band.pct }}%;height:100%;background:var(--sage-deep);"></div>
+          </div>
+          <span class="small text-muted num" style="width:64px;text-align:right;">{{ band.count }} ({{ band.pct }}%)</span>
+        </div>
+      {% endfor %}
+      <a class="btn btn-sm btn-outline-navy mt-3" href="{% url 'results:review' %}?exam={{ stat_exam.id }}&classroom={{ stat_class.id }}">Open full review</a>
+    {% else %}
+      <div class="empty py-4"><i class="bi bi-bar-chart"></i> Pick an exam and a class to see pass rates, averages and the grade spread.</div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card-ofs h-100">
+      <div class="card-head"><h2 class="h6 mb-0">Students per class</h2>
+        <a class="small" href="{% url 'students:list' %}">Manage students</a></div>
+      <div class="table-wrap">
+        <table class="table-ofs">
+          <thead><tr><th>Class</th><th class="right">Active students</th></tr></thead>
+          <tbody>
+            {% for c in class_rows %}
+              <tr><td>{{ c.name }}</td><td class="right num">{{ c.student_count }}</td></tr>
+            {% empty %}
+              <tr><td colspan="2"><div class="empty py-4"><i class="bi bi-building"></i> No classes yet. Add one to get started.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="card-ofs h-100">
+      <div class="card-head"><h2 class="h6 mb-0">Recent publications</h2>
+        <a class="small" href="{% url 'results:published' %}">See all</a></div>
+      <div class="table-wrap">
+        <table class="table-ofs">
+          <thead><tr><th>Exam</th><th>Class</th><th>State</th></tr></thead>
+          <tbody>
+            {% for pub in recent_publications %}
+              <tr>
+                <td class="small">{{ pub.exam }}</td>
+                <td>{{ pub.classroom.name }}{% if pub.section %} ({{ pub.section.name }}){% endif %}</td>
+                <td><span class="pill {% if pub.is_published %}pill-live{% else %}pill-draft{% endif %}">{% if pub.is_published %}Published{% else %}Draft{% endif %}</span></td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3"><div class="empty py-4"><i class="bi bi-broadcast"></i> No results published yet.</div></td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,82 @@
+{% extends "base_admin.html" %}
+{% block title %}Class subjects{% endblock %}
+{% block page_heading %}Subjects for each class{% endblock %}
+{% block content %}
+
+<div class="card-ofs mb-3">
+  <div class="card-head">
+    <div>
+      <h2 class="h6 mb-0">Assign subjects to a class</h2>
+      <span class="small text-muted">A class studies as many subjects as you tick here. Six, ten, any number.</span>
+    </div>
+  </div>
+  <div class="card-body">
+    <form method="post" action="{% url 'academics:classsubject_bulk' %}">
+      {% csrf_token %}
+      <div class="row g-3">
+        <div class="col-md-4">
+          <label class="form-label" for="{{ bulk_form.classroom.id_for_label }}">Class</label>
+          {{ bulk_form.classroom }}
+        </div>
+        <div class="col-md-3">
+          <label class="form-label" for="{{ bulk_form.default_full_mark.id_for_label }}">Default full mark</label>
+          {{ bulk_form.default_full_mark }}
+        </div>
+      </div>
+      <div class="mt-3">
+        <span class="form-label d-block">Subjects</span>
+        <div class="row g-2">
+          {% for choice in bulk_form.subjects %}
+            <div class="col-6 col-md-4 col-lg-3">
+              <label class="d-flex align-items-center gap-2 p-2 border rounded" style="border-color:var(--line)!important;cursor:pointer;">
+                {{ choice.tag }} <span>{{ choice.choice_label }}</span>
+              </label>
+            </div>
+          {% empty %}
+            <div class="col-12 text-muted small">No subjects exist yet. Add some under Subjects first.</div>
+          {% endfor %}
+        </div>
+      </div>
+      <button class="btn btn-navy mt-3" type="submit"><i class="bi bi-check2"></i> Assign to class</button>
+    </form>
+  </div>
+</div>
+
+<div class="card-ofs mb-3"><div class="card-body">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label" for="classroom">Show one class</label>
+      <select class="form-select" name="classroom" id="classroom">
+        <option value="">All classes</option>
+        {% for c in classes %}<option value="{{ c.id }}" {% if selected_class == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }} — {{ c.subject_count }} subject(s)</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-2 d-grid"><button class="btn btn-navy">Filter</button></div>
+  </form>
+</div></div>
+
+<div class="card-ofs">
+  <div class="card-head"><h2 class="h6 mb-0">Curriculum</h2>
+    <a class="btn btn-sm btn-sage" href="{% url 'academics:classsubject_add' %}"><i class="bi bi-plus-lg"></i> Add one</a></div>
+  {% if class_subjects %}
+  <div class="table-wrap"><table class="table-ofs">
+    <thead><tr><th>Class</th><th>Subject</th><th class="right">Default full mark</th><th class="right">Credit</th><th>Type</th><th></th></tr></thead>
+    <tbody>
+      {% for cs in class_subjects %}
+      <tr>
+        <td>{{ cs.classroom.name }}</td>
+        <td class="fw-semibold">{{ cs.subject.name }}</td>
+        <td class="right num">{{ cs.default_full_mark }}</td>
+        <td class="right num">{{ cs.credit }}</td>
+        <td>{% if cs.is_optional %}<span class="pill pill-draft">Optional</span>{% else %}<span class="pill pill-pass">Compulsory</span>{% endif %}</td>
+        <td class="text-end text-nowrap">
+          <a class="btn btn-sm btn-outline-navy" href="{% url 'academics:classsubject_edit' cs.pk %}"><i class="bi bi-pencil"></i></a>
+          <a class="btn btn-sm btn-outline-danger" href="{% url 'academics:classsubject_delete' cs.pk %}"><i class="bi bi-trash"></i></a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty"><i class="bi bi-journals"></i> No subjects assigned yet. Use the form above to build a class curriculum.</div>{% endif %}
+</div>
+{% endblock %}

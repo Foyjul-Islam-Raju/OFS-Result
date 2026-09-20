@@ -1,0 +1,56 @@
+{% extends "base_admin.html" %}
+{% block title %}Full marks{% endblock %}
+{% block page_heading %}Subject full marks{% endblock %}
+{% block content %}
+<div class="card-ofs mb-3"><div class="card-body">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label" for="exam">Exam</label>
+      <select class="form-select" name="exam" id="exam">
+        <option value="">All exams</option>
+        {% for e in exams %}<option value="{{ e.id }}" {% if selected_exam == e.id|stringformat:"s" %}selected{% endif %}>{{ e }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="classroom">Class</label>
+      <select class="form-select" name="classroom" id="classroom">
+        <option value="">All classes</option>
+        {% for c in classes %}<option value="{{ c.id }}" {% if selected_class == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-grid"><button class="btn btn-navy">Filter</button></div>
+  </form>
+</div></div>
+
+<div class="card-ofs">
+  <div class="card-head">
+    <div>
+      <h2 class="h6 mb-0">Exam subjects</h2>
+      <span class="small text-muted">Set the full mark once here; it applies to every student in that class.</span>
+    </div>
+    <a class="btn btn-sm btn-sage" href="{% url 'academics:examsubject_add' %}"><i class="bi bi-plus-lg"></i> Add</a>
+  </div>
+  {% if exam_subjects %}
+  <div class="table-wrap"><table class="table-ofs">
+    <thead><tr><th>Exam</th><th>Class</th><th>Subject</th><th class="right">Full mark</th><th class="right">Pass mark</th><th class="right">Credit</th><th></th></tr></thead>
+    <tbody>
+      {% for es in exam_subjects %}
+      <tr>
+        <td class="small">{{ es.exam }}</td>
+        <td>{{ es.classroom.name }}</td>
+        <td class="fw-semibold">{{ es.subject.name }}</td>
+        <td class="right num">{{ es.full_mark }}</td>
+        <td class="right num text-muted">{{ es.pass_mark|default:"auto" }}</td>
+        <td class="right num">{{ es.credit }}</td>
+        <td class="text-end text-nowrap">
+          <a class="btn btn-sm btn-outline-navy" href="{% url 'academics:examsubject_edit' es.pk %}"><i class="bi bi-pencil"></i></a>
+          <a class="btn btn-sm btn-outline-danger" href="{% url 'academics:examsubject_delete' es.pk %}"><i class="bi bi-trash"></i></a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table></div>
+  {% else %}<div class="empty"><i class="bi bi-sliders"></i> No subjects configured for this exam and class yet.
+    <div class="mt-3"><a class="btn btn-sage" href="{% url 'academics:examsubject_add' %}">Set a full mark</a></div></div>{% endif %}
+</div>
+{% endblock %}

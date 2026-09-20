@@ -1,0 +1,85 @@
+{% extends "base_admin.html" %}
+{% block title %}Exam setup{% endblock %}
+{% block page_heading %}Which subjects were examined{% endblock %}
+{% block content %}
+
+<div class="card-ofs mb-3"><div class="card-body">
+  <form method="get" class="row g-2 align-items-end">
+    <div class="col-md-5">
+      <label class="form-label" for="exam">Exam</label>
+      <select class="form-select" name="exam" id="exam" required>
+        <option value="">Select exam</option>
+        {% for item in form.fields.exam.queryset %}
+          <option value="{{ item.id }}" {% if exam and exam.id == item.id %}selected{% endif %}>{{ item }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-4">
+      <label class="form-label" for="classroom">Class</label>
+      <select class="form-select" name="classroom" id="classroom" required>
+        <option value="">Select class</option>
+        {% for item in form.fields.classroom.queryset %}
+          <option value="{{ item.id }}" {% if classroom and classroom.id == item.id %}selected{% endif %}>{{ item.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="col-md-3 d-grid"><button class="btn btn-navy">Load curriculum</button></div>
+  </form>
+</div></div>
+
+{% if not exam or not classroom %}
+  <div class="card-ofs"><div class="empty">
+    <i class="bi bi-list-check"></i>
+    Pick an exam and a class. You'll get that class's full subject list and can tick the ones this exam was actually held in.
+  </div></div>
+{% elif not curriculum %}
+  <div class="card-ofs"><div class="empty">
+    <i class="bi bi-journals"></i>
+    {{ classroom.name }} has no subjects assigned yet.
+    <div class="mt-3"><a class="btn btn-sage" href="{% url 'academics:classsubject_list' %}">Build the curriculum</a></div>
+  </div></div>
+{% else %}
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="exam" value="{{ exam.id }}">
+    <input type="hidden" name="classroom" value="{{ classroom.id }}">
+    <div class="card-ofs">
+      <div class="card-head">
+        <div>
+          <h2 class="h6 mb-0">{{ exam.name }} {{ exam.academic_year }} — {{ classroom.name }}</h2>
+          <span class="small text-muted">{{ curriculum|length }} subject(s) in the curriculum. Untick anything this exam was not held in; only ticked subjects appear on the result.</span>
+        </div>
+        {% if exam.exam_type %}<span class="pill {% if exam.is_semester %}pill-live{% else %}pill-draft{% endif %}">{{ exam.exam_type.name }}</span>{% endif %}
+      </div>
+      <div class="table-wrap">
+        <table class="table-ofs">
+          <thead><tr><th style="width:80px;">Examined</th><th>Subject</th><th class="right" style="width:160px;">Full mark</th><th class="right">Credit</th></tr></thead>
+          <tbody>
+            {% for cs in curriculum %}
+              <tr>
+                <td class="text-center">
+                  <input class="form-check-input" type="checkbox" name="subjects" value="{{ cs.subject_id }}"
+                         id="sub{{ cs.subject_id }}" {% if cs.checked %}checked{% endif %}>
+                </td>
+                <td>
+                  <label for="sub{{ cs.subject_id }}" class="fw-semibold mb-0">{{ cs.name }}</label>
+                  {% if cs.is_optional %}<span class="pill pill-draft ms-2">Optional</span>{% endif %}
+                </td>
+                <td class="right">
+                  <input class="form-control num text-end" style="width:120px;margin-left:auto;"
+                         type="number" min="1" name="full_{{ cs.subject_id }}" value="{{ cs.full_mark }}">
+                </td>
+                <td class="right num">{{ cs.credit }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="card-body border-top d-flex gap-2">
+        <button class="btn btn-navy" type="submit"><i class="bi bi-check2"></i> Save exam subjects</button>
+        <a class="btn btn-outline-navy ms-auto" href="{% url 'results:mark_entry' %}?exam={{ exam.id }}&classroom={{ classroom.id }}">Go to mark entry</a>
+      </div>
+    </div>
+  </form>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,9 @@
+{% extends "base_portal.html" %}
+{% block title %}Page not found{% endblock %}
+{% block content %}
+<div class="lookup-card text-center">
+  <h1 class="lookup-title">Page not found</h1>
+  <p class="text-muted">The link you followed does not exist on this site.</p>
+  <a class="btn btn-navy" href="{% url 'portal:lookup' %}">Back to the result portal</a>
+</div>
+{% endblock %}

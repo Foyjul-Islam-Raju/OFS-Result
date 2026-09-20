@@ -1,0 +1,29 @@
+{% extends "base_admin.html" %}
+{% block title %}Settings{% endblock %}
+{% block page_heading %}Settings{% endblock %}
+{% block content %}
+<div class="row"><div class="col-lg-8">
+  <div class="card-ofs">
+    <div class="card-head"><h2 class="h6 mb-0">Institution and result rules</h2></div>
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="mb-3 {% if field.field.widget.input_type == 'checkbox' %}form-check{% endif %}">
+            {% if field.field.widget.input_type == 'checkbox' %}
+              {{ field }}
+              <label class="form-check-label ms-1" for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {% else %}
+              <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+            {% endif %}
+            {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+            {% for error in field.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+          </div>
+        {% endfor %}
+        <button class="btn btn-navy" type="submit">Save settings</button>
+      </form>
+    </div>
+  </div>
+</div></div>
+{% endblock %}
